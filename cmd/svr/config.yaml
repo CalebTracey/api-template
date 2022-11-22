@@ -1,0 +1,20 @@
+Env: "local"
+Port: "6080"
+AppName: "api-template"
+ClientConfig:
+  Timeout: 15
+  IdleConnTimeout: 30
+  MaxIdleConsPerHost: 1
+  MaxConsPerHost: 1
+DatabaseConfigs:
+  - Name: "PSQL"
+    Database: "PSQL_DB"
+    Server: "localhost:5432"
+    Username: "postgres"
+    Password: "password"
+    Scheme: "postgres"
+ServiceConfigs:
+  - Name: "exa,ple"
+    URL: "https://example.net/v5"
+    ApiKeyEnvironmentVariable: "EXAMPLE_API_KEY"
+    PublicKeyEnvironmentVariable: "EXAMPLE_PUBLIC_KEY"
