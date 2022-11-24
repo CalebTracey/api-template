@@ -13,7 +13,7 @@ type ErrorLog struct {
 }
 
 // ErrorLogs defines model for ErrorLogs.
-type ErrorLogs = []interface{}
+type ErrorLogs = []ErrorLog
 
 // Message defines model for Message.
 type Message struct {

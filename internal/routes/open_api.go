@@ -52,13 +52,12 @@ func NewOpenAPI3() openapi3.T {
 					WithNullable()).
 				WithProperty("query", openapi3.NewStringSchema().
 					WithNullable())),
-		"ErrorLogs": openapi3.NewSchemaRef("",
-			openapi3.NewArraySchema().
-				WithItems(&openapi3.Schema{
-					Items: &openapi3.SchemaRef{
-						Ref: "#/components/schemas/ErrorLog",
-					},
-				})),
+		"ErrorLogs": openapi3.NewArraySchema().
+			WithItems(&openapi3.Schema{
+				Type: openapi3.TypeArray,
+				Items: &openapi3.SchemaRef{
+					Ref: "#/components/schemas/ErrorLog",
+				}}).Items,
 		"Message": openapi3.NewSchemaRef("",
 			openapi3.NewObjectSchema().
 				WithPropertyRef("errorLog", &openapi3.SchemaRef{

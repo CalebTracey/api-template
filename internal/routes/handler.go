@@ -1,14 +1,13 @@
 package routes
 
 import (
-	"bytes"
 	"encoding/json"
 	request2 "github.com/calebtracey/api-template/external/models/request"
 	"github.com/calebtracey/api-template/external/models/response"
 	"github.com/calebtracey/api-template/internal/facade"
 	"github.com/gorilla/mux"
+	"github.com/rakyll/statik/fs"
 	log "github.com/sirupsen/logrus"
-	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -26,6 +25,15 @@ func (h *Handler) InitializeRoutes() *mux.Router {
 	r.Handle("/health", h.HealthCheck()).Methods(http.MethodGet)
 
 	r.Handle("/add", h.AddNewHandler()).Methods(http.MethodPost)
+
+	staticFs, err := fs.New()
+	if err != nil {
+		panic(err)
+	}
+
+	staticServer := http.FileServer(staticFs)
+	sh := http.StripPrefix("/swagger-ui/", staticServer)
+	r.PathPrefix("/swagger-ui/").Handler(sh)
 
 	return r
 }
@@ -66,46 +74,4 @@ func (h *Handler) HealthCheck() http.HandlerFunc {
 			return
 		}
 	}
-}
-
-func writeHeader(w http.ResponseWriter, code int) http.ResponseWriter {
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.WriteHeader(code)
-	return w
-}
-
-func readBody(body io.ReadCloser) ([]byte, error) {
-	buf := new(bytes.Buffer)
-	_, copyErr := io.Copy(buf, body)
-	if copyErr != nil {
-		return nil, copyErr
-	}
-	return buf.Bytes(), nil
-}
-
-func renderResponse(w http.ResponseWriter, res interface{}, status int) {
-	w.Header().Set("Content-Type", "application/json")
-	content, err := json.Marshal(res)
-	if err != nil {
-		log.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(status)
-	if _, err = w.Write(content); err != nil {
-		log.Error(err)
-	}
-}
-
-func errorLogs(errors []error, rootCause string, status int) []response.ErrorLog {
-	var errLogs []response.ErrorLog
-	for _, err := range errors {
-		errLogs = append(errLogs, response.ErrorLog{
-			RootCause:  rootCause,
-			StatusCode: strconv.Itoa(status),
-			Trace:      err.Error(),
-		})
-	}
-	return errLogs
 }

@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/calebtracey/rugby-data-api/pkg/openapi3"
+	"github.com/calebtracey/api-template/pkg/openapi3"
 	"log"
 )
 
@@ -13,19 +13,20 @@ func main() {
 		log.Fatalf("Couldn't instantiate client: %s", err)
 	}
 
-	source := "psql_db"
-	compId := "180659"
-	respC, err := client.GetCompetitionWithResponse(context.Background(),
-		openapi3.GetCompetitionJSONRequestBody{
-			Source:        &source,
-			CompetitionID: &compId,
+	reqType := "psql"
+	table := "example"
+	id := "123"
+	respC, err := client.AddToDatabaseWithResponse(context.Background(),
+		openapi3.AddToDatabaseJSONRequestBody{
+			RequestType: &reqType,
+			Table:       &table,
+			Id:          &id,
 		})
 	if err != nil {
 		log.Fatalf("Couldn't get competition %s", err)
 	}
 
-	fmt.Printf("Competition\n\tID: %s\n", *respC.JSON201.Id)
-	fmt.Printf("\tName: %s\n", *respC.JSON201.Name)
-	fmt.Printf("\tTeams: %v\n", *respC.JSON201.Teams)
+	fmt.Printf("\tRows Affected: %s\n", *respC.JSON201.RowsAffected)
+	fmt.Printf("\tLast Inserted ID: %v\n", *respC.JSON201.LastInsertID)
 	fmt.Printf("\tMessage: %v\n", *respC.JSON201.Message)
 }

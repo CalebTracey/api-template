@@ -52,8 +52,7 @@ components:
       type: object
     ErrorLogs:
       items:
-        items:
-          $ref: '#/components/schemas/ErrorLog'
+        $ref: '#/components/schemas/ErrorLog'
       type: array
     Message:
       properties:
@@ -84,6 +83,7 @@ info:
 openapi: 3.0.0
 paths:
   /add:
+    description: Add Data
     post:
       operationId: AddToDatabase
       requestBody:
