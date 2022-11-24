@@ -7,7 +7,7 @@ import (
 	"github.com/calebtracey/api-template/external/models/response"
 	"github.com/calebtracey/api-template/internal/facade"
 	"github.com/gorilla/mux"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
 	"os"
@@ -35,7 +35,6 @@ func (h *Handler) AddNewHandler() http.HandlerFunc {
 		startTime := time.Now()
 		var psqlResponse response.PSQLResponse
 		var psqlRequest request2.PSQLRequest
-
 		defer func() {
 			status, _ := strconv.Atoi(psqlResponse.Message.Status)
 			hn, _ := os.Hostname()
@@ -63,7 +62,7 @@ func (h *Handler) HealthCheck() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := json.NewEncoder(w).Encode(map[string]bool{"ok": true})
 		if err != nil {
-			logrus.Errorln(err.Error())
+			log.Errorln(err.Error())
 			return
 		}
 	}
@@ -79,11 +78,24 @@ func writeHeader(w http.ResponseWriter, code int) http.ResponseWriter {
 func readBody(body io.ReadCloser) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	_, copyErr := io.Copy(buf, body)
-
 	if copyErr != nil {
 		return nil, copyErr
 	}
 	return buf.Bytes(), nil
+}
+
+func renderResponse(w http.ResponseWriter, res interface{}, status int) {
+	w.Header().Set("Content-Type", "application/json")
+	content, err := json.Marshal(res)
+	if err != nil {
+		log.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(status)
+	if _, err = w.Write(content); err != nil {
+		log.Error(err)
+	}
 }
 
 func errorLogs(errors []error, rootCause string, status int) []response.ErrorLog {
