@@ -14,7 +14,7 @@ DatabaseConfigs:
     Password: "password"
     Scheme: "postgres"
 ServiceConfigs:
-  - Name: "exa,ple"
+  - Name: "example"
     URL: "https://example.net/v5"
     ApiKeyEnvironmentVariable: "EXAMPLE_API_KEY"
     PublicKeyEnvironmentVariable: "EXAMPLE_PUBLIC_KEY"

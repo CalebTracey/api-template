@@ -4,7 +4,6 @@ import (
 	"github.com/NYTimes/gziphandler"
 	"github.com/calebtracey/api-template/internal/routes"
 	config "github.com/calebtracey/config-yaml"
-	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -16,7 +15,7 @@ const Port = "6080"
 
 func main() {
 	defer panicQuit()
-	log.Fatal(godotenv.Load())
+	//log.Fatal(godotenv.Load())
 	appConfig := config.NewFromFile(configPath)
 	facade, err := initializeDAO(*appConfig)
 	if err != nil {
