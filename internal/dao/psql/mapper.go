@@ -17,7 +17,7 @@ type MapperI interface {
 type Mapper struct{}
 
 func (m Mapper) CreatePSQLExec(req request.PSQLRequest) string {
-	return fmt.Sprintf(exec, req.Table, req.ID)
+	return fmt.Sprintf(exec, req.Table, req.Id)
 }
 
 func (m Mapper) PSQLResultToResponse(res sql.Result) (response response.PSQLResponse) {

@@ -1,14 +1,13 @@
 package routes
 
 import (
-	"bytes"
 	"encoding/json"
 	request2 "github.com/calebtracey/api-template/external/models/request"
 	"github.com/calebtracey/api-template/external/models/response"
 	"github.com/calebtracey/api-template/internal/facade"
 	"github.com/gorilla/mux"
-	"github.com/sirupsen/logrus"
-	"io"
+	"github.com/rakyll/statik/fs"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"os"
 	"strconv"
@@ -27,6 +26,15 @@ func (h *Handler) InitializeRoutes() *mux.Router {
 
 	r.Handle("/add", h.AddNewHandler()).Methods(http.MethodPost)
 
+	staticFs, err := fs.New()
+	if err != nil {
+		panic(err)
+	}
+
+	staticServer := http.FileServer(staticFs)
+	sh := http.StripPrefix("/swagger-ui/", staticServer)
+	r.PathPrefix("/swagger-ui/").Handler(sh)
+
 	return r
 }
 
@@ -35,7 +43,6 @@ func (h *Handler) AddNewHandler() http.HandlerFunc {
 		startTime := time.Now()
 		var psqlResponse response.PSQLResponse
 		var psqlRequest request2.PSQLRequest
-
 		defer func() {
 			status, _ := strconv.Atoi(psqlResponse.Message.Status)
 			hn, _ := os.Hostname()
@@ -63,37 +70,8 @@ func (h *Handler) HealthCheck() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := json.NewEncoder(w).Encode(map[string]bool{"ok": true})
 		if err != nil {
-			logrus.Errorln(err.Error())
+			log.Errorln(err.Error())
 			return
 		}
 	}
-}
-
-func writeHeader(w http.ResponseWriter, code int) http.ResponseWriter {
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.WriteHeader(code)
-	return w
-}
-
-func readBody(body io.ReadCloser) ([]byte, error) {
-	buf := new(bytes.Buffer)
-	_, copyErr := io.Copy(buf, body)
-
-	if copyErr != nil {
-		return nil, copyErr
-	}
-	return buf.Bytes(), nil
-}
-
-func errorLogs(errors []error, rootCause string, status int) []response.ErrorLog {
-	var errLogs []response.ErrorLog
-	for _, err := range errors {
-		errLogs = append(errLogs, response.ErrorLog{
-			RootCause:  rootCause,
-			StatusCode: strconv.Itoa(status),
-			Trace:      err.Error(),
-		})
-	}
-	return errLogs
 }
