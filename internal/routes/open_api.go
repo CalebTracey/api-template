@@ -107,6 +107,7 @@ func NewOpenAPI3() openapi3.T {
 
 	swagger.Paths = openapi3.Paths{
 		"/add": &openapi3.PathItem{
+			Description: "Add Data",
 			Post: &openapi3.Operation{
 				OperationID: "AddToDatabase",
 				RequestBody: &openapi3.RequestBodyRef{
