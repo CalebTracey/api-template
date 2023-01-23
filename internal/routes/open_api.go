@@ -2,8 +2,7 @@ package routes
 
 import (
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/gorilla/mux"
-	"gopkg.in/yaml.v3"
+	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
@@ -130,20 +129,20 @@ func NewOpenAPI3() openapi3.T {
 	return swagger
 }
 
-func RegisterOpenAPI(r *mux.Router) {
+func RegisterOpenAPI(r *gin.Engine) {
 	swagger := NewOpenAPI3()
 
-	r.HandleFunc("/openapi3.json", func(w http.ResponseWriter, r *http.Request) {
-		renderResponse(w, &swagger, http.StatusOK)
-	}).Methods(http.MethodGet)
-
-	r.HandleFunc("/openapi3.yaml", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/x-yaml")
-
-		data, _ := yaml.Marshal(&swagger)
-
-		_, _ = w.Write(data)
-
-		w.WriteHeader(http.StatusOK)
-	}).Methods(http.MethodGet)
+	r.Handle(http.MethodGet, "/openapi3.json", func(ctx *gin.Context) {
+		ctx.JSON(http.StatusOK, &swagger)
+	})
+	//
+	//r.HandleFunc("/openapi3.yaml", func(w http.ResponseWriter, r *http.Request) {
+	//	w.Header().Set("Content-Type", "application/x-yaml")
+	//
+	//	data, _ := yaml.Marshal(&swagger)
+	//
+	//	_, _ = w.Write(data)
+	//
+	//	w.WriteHeader(http.StatusOK)
+	//}).Methods(http.MethodGet)
 }

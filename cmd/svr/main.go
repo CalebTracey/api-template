@@ -16,7 +16,7 @@ const Port = "6080"
 func main() {
 	defer panicQuit()
 	//log.Fatal(godotenv.Load())
-	appConfig := config.NewFromFile(configPath)
+	appConfig := config.New(configPath)
 	facade, err := initializeDAO(*appConfig)
 	if err != nil {
 		log.Error(err)

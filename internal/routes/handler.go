@@ -2,15 +2,11 @@ package routes
 
 import (
 	"encoding/json"
-	request2 "github.com/calebtracey/api-template/external/models/request"
-	"github.com/calebtracey/api-template/external/models/response"
+	"github.com/calebtracey/api-template/external/models"
 	"github.com/calebtracey/api-template/internal/facade"
-	"github.com/gorilla/mux"
-	"github.com/rakyll/statik/fs"
+	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	"os"
-	"strconv"
 	"time"
 )
 
@@ -18,57 +14,50 @@ type Handler struct {
 	Service facade.APIFacadeI
 }
 
-func (h *Handler) InitializeRoutes() *mux.Router {
-	r := mux.NewRouter().StrictSlash(true)
+func (h *Handler) InitializeRoutes() *gin.Engine {
+
+	r := gin.Default()
 
 	// Health check
-	r.Handle("/health", h.HealthCheck()).Methods(http.MethodGet)
+	r.Handle(http.MethodGet, "/health", h.HealthCheck())
 
-	r.Handle("/add", h.AddNewHandler()).Methods(http.MethodPost)
+	r.Handle(http.MethodPost, "/add", h.AddNewHandler())
+	//TODO fix this for gin
+	//staticFs, err := fs.New()
+	//if err != nil {
+	//	panic(err)
+	//}
 
-	staticFs, err := fs.New()
-	if err != nil {
-		panic(err)
-	}
+	//staticServer := http.FileServer(staticFs)
+	//sh := http.StripPrefix("/swagger-ui/", staticServer)
 
-	staticServer := http.FileServer(staticFs)
-	sh := http.StripPrefix("/swagger-ui/", staticServer)
-	r.PathPrefix("/swagger-ui/").Handler(sh)
+	//r.PathPrefix("/swagger-ui/").Handler(sh)
 
 	return r
 }
 
-func (h *Handler) AddNewHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		startTime := time.Now()
-		var psqlResponse response.PSQLResponse
-		var psqlRequest request2.PSQLRequest
-		defer func() {
-			status, _ := strconv.Atoi(psqlResponse.Message.Status)
-			hn, _ := os.Hostname()
-			psqlResponse.Message.HostName = hn
-			psqlResponse.Message.TimeTaken = time.Since(startTime).String()
-			_ = json.NewEncoder(writeHeader(w, status)).Encode(psqlResponse)
-		}()
-		body, bodyErr := readBody(r.Body)
+func (h *Handler) AddNewHandler() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		sw := time.Now()
+		statusCode := http.StatusOK
 
-		if bodyErr != nil {
-			psqlResponse.Message.ErrorLog = errorLogs([]error{bodyErr}, "Unable to read psqlRequest body", http.StatusBadRequest)
-			return
-		}
-		err := json.Unmarshal(body, &psqlRequest)
-		if err != nil {
-			psqlResponse.Message.ErrorLog = errorLogs([]error{err}, "Unable to parse psqlRequest", http.StatusBadRequest)
-			return
-		}
+		var apiRequest models.Request
+		var apiResponse models.Response
 
-		psqlResponse = h.Service.PSQLResults(r.Context(), psqlRequest)
+		apiResponse = h.Service.FacadeResponse(ctx, *apiRequest.FromJSON(ctx.Request.Body))
+
+		if len(apiResponse.Message.ErrorLog) > 0 {
+			statusCode = apiResponse.Message.ErrorLog.GetHTTPStatus(len(apiResponse.Stuff))
+		}
+		apiResponse.Message.AddMessageDetails(sw)
+
+		ctx.JSON(statusCode, apiResponse)
 	}
 }
 
-func (h *Handler) HealthCheck() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		err := json.NewEncoder(w).Encode(map[string]bool{"ok": true})
+func (h *Handler) HealthCheck() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		err := json.NewEncoder(ctx.Writer).Encode(map[string]bool{"ok": true})
 		if err != nil {
 			log.Errorln(err.Error())
 			return
