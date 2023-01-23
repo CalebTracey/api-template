@@ -2,24 +2,26 @@ package facade
 
 import (
 	"context"
+	"github.com/calebtracey/api-template/external/models"
 	"github.com/calebtracey/api-template/external/models/request"
-	"github.com/calebtracey/api-template/external/models/response"
 	psql2 "github.com/calebtracey/api-template/internal/facade/psql"
 	"strings"
 )
 
 type APIFacadeI interface {
-	PSQLResults(ctx context.Context, req request.PSQLRequest) (resp response.PSQLResponse)
+	FacadeResponse(ctx context.Context, req models.Request) (resp models.Response)
 }
 
 type APIFacade struct {
 	PSQLDao psql2.FacadeI
 }
 
-func (s APIFacade) PSQLResults(ctx context.Context, req request.PSQLRequest) (resp response.PSQLResponse) {
+func (s APIFacade) FacadeResponse(ctx context.Context, req models.Request) (resp models.Response) {
 	//TODO add validation
-	if strings.EqualFold(req.RequestType, "Insert") {
-		resp = s.PSQLDao.AddNew(ctx, req)
+	if strings.EqualFold(req.Type, "Insert") {
+		_ = s.PSQLDao.AddNew(ctx, request.PSQLRequest{})
+		//TODO add mappers
 	}
+
 	return resp
 }
